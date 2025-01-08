@@ -55,14 +55,13 @@ class LandingAPIDetail(APIView):
         return Response(None, status=status.HTTP_200_OK)
 
     def delete(self, request, pk):
-        ref = db.reference(f'{self.collection_name}')
-        data = ref.get()
-        
         try:
-          item = self.get_object(pk)
-        except:
-            return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+            ref = db.reference(f'{self.collection_name}/{pk}')
+            data = ref.get()
+            if not data:
+                return Response({"error": "Item not Found"}, status=status.HTTP_404_NOT_FOUND)
+            ref.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        item.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
