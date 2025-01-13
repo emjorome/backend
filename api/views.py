@@ -49,10 +49,40 @@ class LandingAPIDetail(APIView):
     collection_name = 'coleccion'
 
     def get(self, request, pk):
-        return Response(None, status=status.HTTP_200_OK)
+        """Obtiene todos los elementos o uno específico."""
+        try:
+            if pk:
+                ref = db.reference(f'{self.collection_name}/{pk}')
+                data = ref.get()
+                if not data:
+                    return Response({"error": "Elemento no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                ref = db.reference(f'{self.collection_name}')
+                data = ref.get()
+            return Response(data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put(self, request, pk):
-        return Response(None, status=status.HTTP_200_OK)
+        required_fields = ["email"]
+
+        for field in required_fields:
+            if field not in request.data:
+                return Response({'error': f'{field} is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            ref = db.reference(f'{self.collection_name}/{pk}')
+            data = ref.get()
+
+            if not data:
+                return Response({'error': 'Element not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            ref.update(request.data)
+
+            return Response({'message': 'Element updated successfully'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, pk):
         try:
